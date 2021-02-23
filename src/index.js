@@ -39,7 +39,6 @@ function spawnFfmpeg(opts = []) {
 
   return ffmpeg;
 }
-
 let scheduledItems = [];
 client.keys("freshcaster-schedule-item:*", (err, keys) => {
   keys.map((k) => {
@@ -249,7 +248,7 @@ const server = net
     // throw err;
   });
 
-server.listen(7878, "localhost", () => {
+server.listen(7878, "0.0.0.0", () => {
   console.log("opened server on", server.address());
 });
 
