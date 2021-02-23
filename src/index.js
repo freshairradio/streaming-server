@@ -5,7 +5,7 @@ const { spawn } = require("child_process");
 const _ = require("lodash");
 const redis = require("redis");
 const express = require("express");
-const client = redis.createClient();
+const client = redis.createClient({ host: "redis", port: 6379 });
 const cors = require("cors");
 client.on("error", function (error) {
   console.error(error);
