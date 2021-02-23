@@ -1,18 +1,12 @@
 const net = require("net");
-const http = require("http");
 const https = require("https");
 const fs = require("fs");
 const { spawn } = require("child_process");
-const Stream = require("stream");
 const _ = require("lodash");
-const axios = require("axios");
-const offairPlaylist = new Stream.Readable({});
 const redis = require("redis");
 const express = require("express");
 const client = redis.createClient();
 const cors = require("cors");
-const { last } = require("lodash");
-const { PassThrough } = require("stream");
 client.on("error", function (error) {
   console.error(error);
 });
@@ -227,7 +221,7 @@ const server = net
         const [username, password] = Buffer.from(auth, "base64")
           .toString()
           .split(":");
-        if (username !== "source" || password != "robot-carnage") {
+        if (username !== "source" || password != process.env.STREAM_PW) {
           return socket.end("HTTP/1.1 401 UNAUTHORIZED\r\n\r\n");
         }
         socket.write("HTTP/1.1 200 OK\r\n\r\n");
