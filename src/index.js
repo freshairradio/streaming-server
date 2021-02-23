@@ -32,7 +32,13 @@ function spawnFfmpeg(opts = [], label = "") {
   const ffmpeg = spawn("ffmpeg", args);
 
   console.log("Spawning ffmpeg " + args.join(" "), label);
+  ffmpeg.stderr.on("data", function (data) {
+    console.log(label, "Incoming data: " + data);
+  });
 
+  ffmpeg.stderr.on("error", function (error) {
+    console.log(label, "Error" + error);
+  });
   ffmpeg.on("exit", function (code) {
     console.log("FFMPEG child process exited with code " + code, label);
   });
