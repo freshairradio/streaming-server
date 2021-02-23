@@ -233,13 +233,11 @@ const server = net
         socket.write(
           "HTTP/1.1 200 OK\r\nContent-Type: audio/mpeg\r\nConnection: keep-alive\r\n\r\n"
         );
-        console.log("Add listener", socket.remoteAddress);
+        console.log("Add listener", headers);
         socket.write(jingle);
         muxer.stdout.pipe(socket);
         socket.on("error", console.error);
-        socket.on("end", () =>
-          console.log("Close Listener", socket.remoteAddress)
-        );
+        socket.on("end", () => console.log("Close Listener", headers));
       }
     });
   })
