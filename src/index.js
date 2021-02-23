@@ -13,12 +13,12 @@ client.on("error", function (error) {
 });
 const jingle = fs.readFileSync("./ident.mp3");
 
-function spawnFfmpeg(label = "") {
+function spawnFfmpeg(label = "", inp = "pipe:0") {
   let args = [
     "-hide_banner",
     "-re",
     "-i",
-    "pipe:0",
+    inp,
     "-f",
     "mp3",
     "-vn",
@@ -158,26 +158,7 @@ const Fanout = (muxer) => {
       if (type === State.SCHEDULED) {
         mode = State.SCHEDULED;
         lastStream = currentStream;
-        currentStream = spawnFfmpeg(`Scheduled: ${url}`);
-        https
-          .get(url, (res) => {
-            res
-              .pipe(currentStream.stdin)
-              .on("error", (e) =>
-                console.error("Scheduled item download errored out", e)
-              )
-              .on("end", (e) => console.error("Scheduled item download ended"));
-          })
-          .on("error", (e) => {
-            console.error("Scheduled item download connection errored out", e);
-            if (mode === State.SCHEDULED) {
-              mode = State.OFFAIR;
-              choose();
-            }
-          })
-          .on("end", () =>
-            console.log("Scheduled item download connection ended")
-          );
+        currentStream = spawnFfmpeg(`Scheduled: ${url}`, url);
 
         currentStream.stdout.on("data", (d) => {
           if (lastStream && mode === State.SCHEDULED) {
