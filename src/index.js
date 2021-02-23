@@ -227,6 +227,7 @@ const server = net
         }
         socket.write("HTTP/1.1 200 OK\r\n\r\n");
         if (url == "/live") {
+          console.log("Connecting live source", headers);
           ctrl.connectLiveSource(socket);
         } else {
           socket.end();
