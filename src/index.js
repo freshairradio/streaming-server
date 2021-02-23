@@ -138,7 +138,7 @@ const Fanout = (muxer) => {
               choose();
             }
           })
-          .on("error", () => {
+          .on("error", (e) => {
             console.log("Live Stream encoding errored out", e);
           });
       }
@@ -238,14 +238,13 @@ const server = net
         console.log("Add listener", rawHeaders);
         socket.write(jingle);
         muxer.stdout.pipe(socket);
-        socket.on("error", console.error);
+        socket.on("error", () => console.log("Listener error", rawHeaders));
         socket.on("end", () => console.log("Close Listener", rawHeaders));
       }
     });
   })
   .on("error", (err) => {
-    // Handle errors here.
-    // throw err;
+    console.log("Big ol' error", err);
   });
 
 server.listen(7878, "0.0.0.0", () => {
