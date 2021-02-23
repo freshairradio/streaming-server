@@ -109,6 +109,12 @@ const Fanout = (muxer) => {
   };
   choose();
   return {
+    disconnectLive() {
+      if (mode === State.LIVE) {
+        mode = State.OFFAIR;
+        choose();
+      }
+    },
     schedule(type, url) {
       if (type === State.LIVE) {
         if (!liveSource) {
@@ -272,6 +278,10 @@ app.post(`/schedule`, (req, res) => {
   scheduledItems = _.sortBy(scheduledItems, "time");
 
   res.json(req.body);
+});
+app.post(`/disconnect`, (req, res) => {
+  ctrl.disconnectLive();
+  res.status(200).send();
 });
 console.log("Listening");
 app.listen(8989, () => "Server started");
