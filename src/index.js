@@ -12,7 +12,7 @@ client.on("error", function (error) {
 });
 const jingle = fs.readFileSync("./ident.mp3");
 
-function spawnFfmpeg(opts = []) {
+function spawnFfmpeg(opts = [], label = "") {
   let args = [
     "-hide_banner",
     "-re",
@@ -31,10 +31,10 @@ function spawnFfmpeg(opts = []) {
 
   const ffmpeg = spawn("ffmpeg", args);
 
-  console.log("Spawning ffmpeg " + args.join(" "));
+  console.log("Spawning ffmpeg " + args.join(" "), label);
 
   ffmpeg.on("exit", function (code) {
-    console.log("FFMPEG child process exited with code " + code);
+    console.log("FFMPEG child process exited with code " + code, label);
   });
 
   return ffmpeg;
@@ -62,7 +62,7 @@ const schedulingTick = () => {
 };
 setInterval(schedulingTick, 500);
 
-let muxer = spawnFfmpeg(["-af", "loudnorm=I=-18:LRA=13:TP=-2"]);
+let muxer = spawnFfmpeg(["-af", "loudnorm=I=-18:LRA=13:TP=-2"], "Global muxer");
 muxer.stdout.pipe(
   fs.createWriteStream(`./recordings/broadcast-${Date.now()}.mp3`)
 );
@@ -82,8 +82,9 @@ const Fanout = (muxer) => {
     if (mode === State.OFFAIR) {
       fs.readdir("./eighties", (err, files) => {
         if (currentStream) currentStream.kill();
-        currentStream = spawnFfmpeg();
-        fs.createReadStream(`./eighties/${_.sample(files)}`)
+        let file = _.sample(files);
+        currentStream = spawnFfmpeg([], `Offair: ${file}`);
+        fs.createReadStream(`./eighties/${file}`)
           .pipe(currentStream.stdin)
           .on("error", (e) => console.error("FS error"));
         currentStream.stdout.on("data", (d) => {
@@ -108,7 +109,7 @@ const Fanout = (muxer) => {
         }
         mode = State.LIVE;
         lastStream = currentStream;
-        currentStream = spawnFfmpeg();
+        currentStream = spawnFfmpeg([], "Live source");
 
         liveSource
           .pipe(currentStream.stdin)
@@ -144,7 +145,7 @@ const Fanout = (muxer) => {
       if (type === State.SCHEDULED) {
         mode = State.SCHEDULED;
         lastStream = currentStream;
-        currentStream = spawnFfmpeg();
+        currentStream = spawnFfmpeg([], `Scheduled: ${url}`);
         https
           .get(url, (res) => {
             res
