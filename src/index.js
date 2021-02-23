@@ -5,6 +5,7 @@ const { spawn } = require("child_process");
 const _ = require("lodash");
 const redis = require("redis");
 const express = require("express");
+const stream = require("stream");
 const client = redis.createClient({ host: "redis", port: 6379 });
 const cors = require("cors");
 client.on("error", function (error) {
@@ -12,7 +13,7 @@ client.on("error", function (error) {
 });
 const jingle = fs.readFileSync("./ident.mp3");
 
-function spawnFfmpeg(opts = [], label = "") {
+function spawnFfmpeg(label = "") {
   let args = [
     "-hide_banner",
     "-re",
@@ -25,7 +26,8 @@ function spawnFfmpeg(opts = [], label = "") {
     "44100",
     "-b:a",
     "196k",
-    ...opts,
+    "-af",
+    "loudnorm=I=-18:LRA=13:TP=-2",
     "pipe:1"
   ];
 
@@ -68,10 +70,9 @@ const schedulingTick = () => {
 };
 setInterval(schedulingTick, 500);
 
-let muxer = spawnFfmpeg(["-af", "loudnorm=I=-18:LRA=13:TP=-2"], "Global muxer");
-muxer.stdout.pipe(
-  fs.createWriteStream(`./recordings/broadcast-${Date.now()}.mp3`)
-);
+let muxer = new stream.PassThrough();
+
+muxer.pipe(fs.createWriteStream(`./recordings/broadcast-${Date.now()}.mp3`));
 const State = {
   LIVE: Symbol("live"),
   OFFAIR: Symbol("offair"),
@@ -89,12 +90,12 @@ const Fanout = (muxer) => {
       fs.readdir("./eighties", (err, files) => {
         if (currentStream) currentStream.kill();
         let file = _.sample(files);
-        currentStream = spawnFfmpeg([], `Offair: ${file}`);
+        currentStream = spawnFfmpeg(`Offair: ${file}`);
         fs.createReadStream(`./eighties/${file}`)
           .pipe(currentStream.stdin)
           .on("error", (e) => console.error("FS error"));
         currentStream.stdout.on("data", (d) => {
-          muxer.stdin.write(d);
+          muxer.write(d);
         });
         currentStream.stdout.on("end", () => {
           console.log("EOF offair track");
@@ -115,7 +116,7 @@ const Fanout = (muxer) => {
         }
         mode = State.LIVE;
         lastStream = currentStream;
-        currentStream = spawnFfmpeg([], "Live source");
+        currentStream = spawnFfmpeg("Live source");
 
         liveSource
           .pipe(currentStream.stdin)
@@ -135,7 +136,7 @@ const Fanout = (muxer) => {
               lastStream.kill();
               lastStream = null;
             }
-            muxer.stdin.write(d);
+            muxer.write(d);
           })
           .on("end", () => {
             console.log("Live Stream encoding ended early");
@@ -151,7 +152,7 @@ const Fanout = (muxer) => {
       if (type === State.SCHEDULED) {
         mode = State.SCHEDULED;
         lastStream = currentStream;
-        currentStream = spawnFfmpeg([], `Scheduled: ${url}`);
+        currentStream = spawnFfmpeg(`Scheduled: ${url}`);
         https
           .get(url, (res) => {
             res
@@ -178,7 +179,7 @@ const Fanout = (muxer) => {
             lastStream = null;
           }
 
-          muxer.stdin.write(d);
+          muxer.write(d);
         });
         currentStream.stdout.on("end", () => {
           console.log("Scheduled encoding ended early");
@@ -244,7 +245,7 @@ const server = net
         );
         console.log("Add listener", rawHeaders);
         socket.write(jingle);
-        muxer.stdout.pipe(socket);
+        muxer.pipe(socket);
         socket.on("error", () => console.log("Listener error", rawHeaders));
         socket.on("end", () => console.log("Close Listener", rawHeaders));
       }
