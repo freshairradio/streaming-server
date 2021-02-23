@@ -76,6 +76,7 @@ const Fanout = (muxer) => {
   let mode = State.OFFAIR;
   let liveSource;
   let currentStream;
+  let lastStream;
   const choose = () => {
     console.log("Choosing new Offair track");
     if (mode === State.OFFAIR) {
