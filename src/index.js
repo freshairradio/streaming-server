@@ -251,6 +251,7 @@ app.use(express.json());
 app.use(cors());
 
 app.post(`/schedule`, (req, res) => {
+  req.body.time = Date.parse(req.body.time);
   client.set(
     `freshcaster-schedule-item:${req.body.time}`,
     JSON.stringify(req.body)
