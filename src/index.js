@@ -58,7 +58,7 @@ client.keys("freshcaster-schedule-item:*", (err, keys) => {
 });
 
 const schedulingTick = () => {
-  // console.log(scheduledItems);
+  console.log(scheduledItems);
   if (scheduledItems.length > 0 && scheduledItems[0].time <= Date.now()) {
     console.log(scheduledItems[0]);
     ctrl.schedule(
