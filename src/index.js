@@ -65,13 +65,21 @@ const schedulingTick = () => {
       scheduledItems[0].type == "live" ? State.LIVE : State.SCHEDULED,
       scheduledItems[0].url
     );
+    client.del(`freshcaster-schedule-item:${scheduledItems[0].time}`);
     scheduledItems.shift();
   }
 };
 setInterval(schedulingTick, 500);
 
 let muxer = new stream.PassThrough();
-
+muxer.on("end", () => {
+  console.log("Muxer ended. This is bad!!");
+  process.exit(1);
+});
+muxer.on("error", (e) => {
+  console.log("Muxer errored. This is bad!!", e);
+  process.exit(1);
+});
 muxer.pipe(fs.createWriteStream(`./recordings/broadcast-${Date.now()}.mp3`));
 const State = {
   LIVE: Symbol("live"),
