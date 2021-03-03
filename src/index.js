@@ -192,9 +192,9 @@ const Fanout = (muxer) => {
           liveSource.end();
         } else {
           liveSource = socket;
-          liveSource.pipe(
-            fs.createWriteStream(`./recordings/${Date.now()}.mp3`)
-          );
+          // liveSource.pipe(
+          //   fs.createWriteStream(`./recordings/${Date.now()}.mp3`)
+          // );
         }
       }
     }
