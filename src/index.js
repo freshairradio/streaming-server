@@ -126,7 +126,9 @@ const Fanout = (muxer) => {
           return false;
         }
         mode = State.LIVE;
-        lastStream = currentStream;
+        currentStream.kill();
+        currentStream = null;
+        muxer.write(jingle);
         currentStream = spawnFfmpeg("Live source");
 
         liveSource
@@ -143,10 +145,6 @@ const Fanout = (muxer) => {
           });
         currentStream.stdout
           .on("data", (d) => {
-            if (lastStream && mode === State.LIVE) {
-              lastStream.kill();
-              lastStream = null;
-            }
             muxer.write(d);
           })
           .on("end", () => {
