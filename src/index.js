@@ -34,9 +34,7 @@ function spawnFfmpeg(label = "", inp = "pipe:0") {
   const ffmpeg = spawn("ffmpeg", args);
 
   console.log("Spawning ffmpeg " + args.join(" "), label);
-  ffmpeg.stderr.on("data", function (data) {
-    console.log(label, "Incoming data: " + data);
-  });
+  ffmpeg.stderr.on("data", function (data) {});
 
   ffmpeg.stderr.on("error", function (error) {
     console.log(label, "Error" + error);
@@ -58,7 +56,6 @@ client.keys("freshcaster-schedule-item:*", (err, keys) => {
 });
 
 const schedulingTick = () => {
-  console.log(scheduledItems);
   if (scheduledItems.length > 0 && scheduledItems[0].time <= Date.now()) {
     console.log(scheduledItems[0]);
     ctrl.schedule(
